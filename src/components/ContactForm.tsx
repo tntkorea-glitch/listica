@@ -6,7 +6,7 @@ import { Contact, Group } from '@/lib/supabase';
 interface ContactFormProps {
   contact?: Contact | null;
   groups: Group[];
-  onSave: (data: Partial<Contact> & { groups?: string[] }) => void;
+  onSave: (data: Omit<Partial<Contact>, 'groups'> & { groups?: string[] }) => void;
   onCancel: () => void;
 }
 
