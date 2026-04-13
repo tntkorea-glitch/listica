@@ -36,7 +36,10 @@ export interface Group {
   user_id: string;
   name: string;
   color: string;
+  version: number;
+  deleted_at?: string | null;
   created_at: string;
+  updated_at: string;
   contact_count?: number;
 }
 
