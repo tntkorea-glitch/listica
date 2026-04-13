@@ -2,22 +2,39 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { requireAuth } from '@/lib/api-auth';
 import { apiError, ErrorCodes } from '@/lib/errors';
+import * as XLSX from 'xlsx';
 
-// GET /api/v1/contacts/export — vCard 내보내기
+// GET /api/v1/contacts/export — 연락처 내보내기
+// ?format=vcard|csv|xlsx  &ids=a,b,c  &group_id=xxx  &fields=name,phone,...
 export async function GET(request: NextRequest) {
   const { user, error } = await requireAuth(request);
   if (error) return error;
 
-  const ids = request.nextUrl.searchParams.get('ids')?.split(',').filter(Boolean);
+  const sp = request.nextUrl.searchParams;
+  const format = sp.get('format') || 'vcard';
+  const ids = sp.get('ids')?.split(',').filter(Boolean);
+  const groupId = sp.get('group_id');
+  const fields = sp.get('fields')?.split(',') || ['name', 'phone', 'email', 'company'];
 
   let query = supabase
     .from('contacts')
-    .select('*')
+    .select('*, contact_groups(group_id, groups:group_id(name))')
     .eq('user_id', user!.id)
     .is('deleted_at', null);
 
   if (ids?.length) {
     query = query.in('id', ids);
+  }
+
+  if (groupId) {
+    const { data: cg } = await supabase
+      .from('contact_groups')
+      .select('contact_id')
+      .eq('group_id', groupId)
+      .is('removed_at', null);
+    if (cg?.length) {
+      query = query.in('id', cg.map(c => c.contact_id));
+    }
   }
 
   const { data: contacts, error: dbError } = await query;
@@ -26,7 +43,74 @@ export async function GET(request: NextRequest) {
     return apiError(ErrorCodes.INTERNAL, dbError.message);
   }
 
-  const vcards = (contacts || []).map(c => {
+  const list = contacts || [];
+
+  if (format === 'csv' || format === 'xlsx') {
+    return exportSpreadsheet(list, format, fields);
+  }
+
+  return exportVCard(list);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function exportSpreadsheet(contacts: any[], format: 'csv' | 'xlsx', fields: string[]) {
+  const headers: string[] = [];
+  const fieldMap: { key: string; header: string; getter: (c: Record<string, unknown>) => string }[] = [];
+
+  const allFields = [
+    { key: 'name', header: '이름', getter: (c: Record<string, unknown>) => [c.last_name, c.first_name].filter(Boolean).join(' ') },
+    { key: 'phone', header: '전화번호', getter: (c: Record<string, unknown>) => (c.phone as string) || '' },
+    { key: 'email', header: '이메일', getter: (c: Record<string, unknown>) => (c.email as string) || '' },
+    { key: 'group', header: '그룹명', getter: (c: Record<string, unknown>) => {
+      const cg = c.contact_groups as { groups?: { name?: string } }[] | undefined;
+      return cg?.map(g => g.groups?.name).filter(Boolean).join(', ') || '';
+    }},
+    { key: 'company', header: '회사·소속', getter: (c: Record<string, unknown>) => (c.company as string) || '' },
+    { key: 'position', header: '직책', getter: (c: Record<string, unknown>) => (c.position as string) || '' },
+    { key: 'address', header: '주소', getter: (c: Record<string, unknown>) => (c.address as string) || '' },
+    { key: 'memo', header: '메모', getter: (c: Record<string, unknown>) => (c.memo as string) || '' },
+  ];
+
+  for (const f of allFields) {
+    if (fields.includes(f.key)) {
+      headers.push(f.header);
+      fieldMap.push(f);
+    }
+  }
+
+  const rows = contacts.map(c => fieldMap.map(f => f.getter(c)));
+  const data = [headers, ...rows];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Contacts');
+
+  const dateStr = new Date().toISOString().slice(0, 10);
+
+  if (format === 'csv') {
+    const csv = XLSX.utils.sheet_to_csv(ws);
+    // BOM + UTF-8 for Excel compatibility
+    const bom = '\uFEFF';
+    return new NextResponse(bom + csv, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="contacts-${dateStr}.csv"`,
+      },
+    });
+  }
+
+  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  return new NextResponse(buf, {
+    headers: {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="contacts-${dateStr}.xlsx"`,
+    },
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function exportVCard(contacts: any[]) {
+  const vcards = contacts.map(c => {
     const lines = [
       'BEGIN:VCARD',
       'VERSION:3.0',
@@ -45,9 +129,7 @@ export async function GET(request: NextRequest) {
     return lines.join('\r\n');
   });
 
-  const body = vcards.join('\r\n');
-
-  return new NextResponse(body, {
+  return new NextResponse(vcards.join('\r\n'), {
     headers: {
       'Content-Type': 'text/vcard; charset=utf-8',
       'Content-Disposition': `attachment; filename="contacts-${new Date().toISOString().slice(0, 10)}.vcf"`,
