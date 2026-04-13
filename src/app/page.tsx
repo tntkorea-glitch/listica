@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Contact } from '@/lib/types';
 import { useContacts } from '@/hooks/useContacts';
 import { useGroups } from '@/hooks/useGroups';
@@ -13,6 +13,8 @@ import ContactForm from '@/components/ContactForm';
 import MoreMenu from '@/components/modals/MoreMenu';
 import ImportModal from '@/components/modals/ImportModal';
 import DuplicatesModal from '@/components/modals/DuplicatesModal';
+import ExportModal from '@/components/modals/ExportModal';
+import SettingsModal from '@/components/modals/SettingsModal';
 
 export default function Home() {
   return (
@@ -33,6 +35,9 @@ function ContactsApp() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [selectedGroup, setSelectedGroup] = useState('');
   const [showFavorites, setShowFavorites] = useState(false);
+  const [showTrash, setShowTrash] = useState(false);
+  const [showNoName, setShowNoName] = useState(false);
+  const [pageSize, setPageSize] = useState(30);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // UI 상태
@@ -42,12 +47,42 @@ function ContactsApp() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showImport, setShowImport] = useState(false);
   const [showDuplicates, setShowDuplicates] = useState(false);
-  const [duplicateGroups, setDuplicateGroups] = useState<Contact[][]>([]);
+  const [showExport, setShowExport] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  // 사이드바 리사이즈
+  const [sidebarWidth, setSidebarWidth] = useState(256);
+  const resizing = useRef(false);
+
+  const handleMouseDown = useCallback(() => {
+    resizing.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizing.current) return;
+      const w = Math.min(Math.max(e.clientX, 180), 500);
+      setSidebarWidth(w);
+    };
+    const handleMouseUp = () => {
+      resizing.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   // 데이터
   const { contacts, total, loading, fetchContacts, toggleFavorite, deleteContact } = useContacts({
-    page, limit: 30, sortField, sortDirection, search, groupId: selectedGroup,
-    favoriteOnly: showFavorites,
+    page, limit: pageSize, sortField, sortDirection, search, groupId: selectedGroup,
+    favoriteOnly: showFavorites, trashOnly: showTrash, noNameOnly: showNoName,
   });
   const { groups, createGroup, deleteGroup, fetchGroups } = useGroups();
 
@@ -63,6 +98,14 @@ function ContactsApp() {
     setSearchInput(value);
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => { setSearch(value); setPage(1); }, 300);
+  };
+
+  const resetFilters = (overrides: Partial<{ group: string; favorites: boolean; trash: boolean; noName: boolean }> = {}) => {
+    setSelectedGroup(overrides.group ?? '');
+    setShowFavorites(overrides.favorites ?? false);
+    setShowTrash(overrides.trash ?? false);
+    setShowNoName(overrides.noName ?? false);
+    setPage(1);
   };
 
   const handleSave = async (data: Omit<Partial<Contact>, 'groups'> & { groups?: string[] }) => {
@@ -101,17 +144,23 @@ function ContactsApp() {
     fetchContacts();
   };
 
-  const handleExport = async () => {
-    const ids = selectedIds.size > 0 ? `?ids=${Array.from(selectedIds).join(',')}` : '';
+  const handleExport = async (format: string, fields: string[], groupId?: string) => {
+    const params = new URLSearchParams({ format });
+    if (fields.length) params.set('fields', fields.join(','));
+    if (groupId) params.set('group_id', groupId);
+    if (selectedIds.size > 0 && !groupId) params.set('ids', Array.from(selectedIds).join(','));
+
     const token = await getAccessToken();
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch(`/api/v1/contacts/export${ids}`, { headers });
+    const res = await fetch(`/api/v1/contacts/export?${params}`, { headers });
     const blob = await res.blob();
+    const ext = format === 'xlsx' ? 'xlsx' : format === 'csv' ? 'csv' : 'vcf';
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `contacts_${new Date().toISOString().slice(0, 10)}.vcf`;
+    a.download = `contacts_${new Date().toISOString().slice(0, 10)}.${ext}`;
     a.click();
+    setShowExport(false);
   };
 
   const handleImport = async (file: File) => {
@@ -132,12 +181,11 @@ function ContactsApp() {
     fetchGroups();
   };
 
-  const handleCheckDuplicates = async () => {
+  const handleFetchDuplicates = async (mode: 'exact' | 'similar') => {
     const headers = await authHeaders();
-    const res = await fetch('/api/v1/contacts/duplicates', { headers });
+    const res = await fetch(`/api/v1/contacts/duplicates?mode=${mode}`, { headers });
     const result = await res.json();
-    setDuplicateGroups(result.data || []);
-    setShowDuplicates(true);
+    return result.data || [];
   };
 
   const handleMerge = async (contactIds: string[], primaryId: string) => {
@@ -146,7 +194,6 @@ function ContactsApp() {
       method: 'POST', headers,
       body: JSON.stringify({ primary_id: primaryId, merge_ids: contactIds.filter(id => id !== primaryId) }),
     });
-    handleCheckDuplicates();
     fetchContacts();
   };
 
@@ -163,22 +210,40 @@ function ContactsApp() {
       ? new Set() : new Set(contacts.map(c => c.id)));
   };
 
-  const totalPages = Math.ceil(total / 30);
+  const totalPages = Math.ceil(total / pageSize);
 
   return (
     <div className="h-screen flex overflow-hidden bg-gray-50">
-      <Sidebar
-        groups={groups}
-        selectedGroup={selectedGroup}
-        onSelectGroup={id => { setSelectedGroup(id); setShowFavorites(false); setPage(1); }}
-        onSelectAll={() => { setSelectedGroup(''); setShowFavorites(false); setPage(1); }}
-        onSelectFavorites={() => { setShowFavorites(true); setSelectedGroup(''); setPage(1); }}
-        showFavorites={showFavorites}
-        totalContacts={total}
-        onCreateGroup={createGroup}
-        onDeleteGroup={deleteGroup}
+      {/* 사이드바 */}
+      <aside className="bg-white border-r border-gray-200 flex-shrink-0" style={{ width: sidebarWidth }}>
+        <Sidebar
+          groups={groups}
+          selectedGroup={selectedGroup}
+          onSelectGroup={id => resetFilters({ group: id })}
+          onSelectAll={() => resetFilters()}
+          onSelectFavorites={() => resetFilters({ favorites: true })}
+          showFavorites={showFavorites}
+          totalContacts={total}
+          onCreateGroup={createGroup}
+          onDeleteGroup={deleteGroup}
+          onSelectTrash={() => resetFilters({ trash: true })}
+          showTrash={showTrash}
+          onSelectNoName={() => resetFilters({ noName: true })}
+          showNoName={showNoName}
+          onOpenSettings={() => setShowSettings(true)}
+          onOpenImport={() => setShowImport(true)}
+          onOpenExport={() => setShowExport(true)}
+          onOpenDuplicates={() => setShowDuplicates(true)}
+        />
+      </aside>
+
+      {/* 리사이즈 핸들 */}
+      <div
+        onMouseDown={handleMouseDown}
+        className="w-1 cursor-col-resize hover:bg-indigo-300 active:bg-indigo-400 transition-colors flex-shrink-0"
       />
 
+      {/* 메인 콘텐츠 */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
           <div className="relative flex-1 max-w-md">
@@ -217,18 +282,30 @@ function ContactsApp() {
                 <button onClick={handleBulkDelete} className="px-3 py-2 text-xs text-red-600 bg-red-50 rounded-lg hover:bg-red-100">삭제</button>
               </>
             )}
-            <button
-              onClick={() => { setEditingContact(null); setShowForm(true); }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              추가
-            </button>
-            <MoreMenu onExport={handleExport} onImport={() => setShowImport(true)} onCheckDuplicates={handleCheckDuplicates} />
+            {!showTrash && (
+              <button
+                onClick={() => { setEditingContact(null); setShowForm(true); }}
+                className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                추가
+              </button>
+            )}
+            <MoreMenu onExport={() => setShowExport(true)} onImport={() => setShowImport(true)} onCheckDuplicates={() => setShowDuplicates(true)} />
           </div>
         </header>
+
+        {/* 휴지통 안내 배너 */}
+        {showTrash && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-sm text-amber-700 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.834-1.964-.834-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            휴지통의 연락처는 30일 후 영구 삭제됩니다.
+          </div>
+        )}
 
         <div className="flex-1 flex min-h-0">
           <div className="w-[400px] border-r border-gray-200 flex flex-col bg-white">
@@ -260,6 +337,7 @@ function ContactsApp() {
         </div>
       </div>
 
+      {/* 모달들 */}
       {showForm && (
         <ContactForm
           contact={editingContact}
@@ -269,7 +347,33 @@ function ContactsApp() {
         />
       )}
       {showImport && <ImportModal onImport={handleImport} onClose={() => setShowImport(false)} />}
-      {showDuplicates && <DuplicatesModal groups={duplicateGroups} onMerge={handleMerge} onClose={() => setShowDuplicates(false)} />}
+      {showDuplicates && (
+        <DuplicatesModal
+          onFetch={handleFetchDuplicates}
+          onMerge={handleMerge}
+          onClose={() => setShowDuplicates(false)}
+        />
+      )}
+      {showExport && (
+        <ExportModal
+          groups={groups}
+          selectedIds={selectedIds}
+          onExport={handleExport}
+          onClose={() => setShowExport(false)}
+        />
+      )}
+      {showSettings && (
+        <SettingsModal
+          settings={{ sortField, sortDirection, pageSize }}
+          onSave={({ sortField: sf, sortDirection: sd, pageSize: ps }) => {
+            setSortField(sf);
+            setSortDirection(sd as 'asc' | 'desc');
+            setPageSize(ps);
+            setPage(1);
+          }}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }
