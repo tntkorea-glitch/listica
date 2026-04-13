@@ -23,9 +23,12 @@ export interface Contact {
   memo?: string;
   profile_image?: string;
   favorite: boolean;
+  version: number;
+  deleted_at?: string | null;
   created_at: string;
   updated_at: string;
   groups?: Group[];
+  contact_groups?: { group_id: string }[];
 }
 
 export interface Group {
