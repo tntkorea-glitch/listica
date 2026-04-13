@@ -40,6 +40,8 @@ export function useContacts(options: UseContactsOptions = {}) {
     if (search) params.set('search', search);
     if (groupId) params.set('group_id', groupId);
     if (favoriteOnly) params.set('favorite', 'true');
+    if (trashOnly) params.set('trash', 'true');
+    if (noNameOnly) params.set('no_name', 'true');
 
     const token = await getAccessToken();
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
