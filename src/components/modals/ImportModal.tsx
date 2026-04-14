@@ -32,6 +32,7 @@ export default function ImportModal({ onPreview, onSave, onClose }: ImportModalP
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [skipDuplicates, setSkipDuplicates] = useState(true);
   const [errMsg, setErrMsg] = useState('');
+  const [tab, setTab] = useState<'new' | 'duplicate'>('new');
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
