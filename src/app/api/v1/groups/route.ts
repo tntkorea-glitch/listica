@@ -19,18 +19,24 @@ export async function GET(request: NextRequest) {
     return apiError(ErrorCodes.INTERNAL, dbError.message);
   }
 
-  // 그룹별 연락처 수 — 1000행 limit 우회 위해 페이지네이션
-  const counts = await fetchAllRows<{ group_id: string }>(() =>
-    supabase
-      .from('contact_groups')
-      .select('group_id')
-      .is('removed_at', null)
-  );
+  // 그룹별 연락처 수 — RPC 함수로 DB 집계 (빠름)
+  const { data: countsData, error: countsErr } = await supabase
+    .rpc('group_contact_counts', { uid: user!.id });
 
   const countMap: Record<string, number> = {};
-  counts.forEach(c => {
-    countMap[c.group_id] = (countMap[c.group_id] || 0) + 1;
-  });
+  if (!countsErr && countsData) {
+    for (const row of countsData as { group_id: string; cnt: number | string }[]) {
+      countMap[row.group_id] = Number(row.cnt);
+    }
+  } else {
+    // RPC 실패 시 fallback: 기존 페이지네이션
+    const counts = await fetchAllRows<{ group_id: string }>(() =>
+      supabase.from('contact_groups').select('group_id').is('removed_at', null)
+    );
+    counts.forEach(c => {
+      countMap[c.group_id] = (countMap[c.group_id] || 0) + 1;
+    });
+  }
 
   const result = (groups || []).map(g => ({
     ...g,
