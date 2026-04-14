@@ -7,8 +7,8 @@ originSessionId: 1a01f8a2-e5a3-45c4-abec-d1b739feaec5
 Google Cloud Console OAuth 설정에 **liketica**와 **listica** 관련 클라이언트/프로젝트가 섞여있어 꼬인 상태로 발견됨 (2026-04-15).
 
 현재 Supabase에 등록된 Google Provider:
-- Client ID: Supabase 대시보드 → Authentication → Providers → Google 에서 직접 확인
-- Client Secret: Supabase 대시보드에서 직접 확인 (보안상 메모리에 평문 저장 안 함)
+- Client ID/Secret은 Supabase 대시보드(Authentication → Providers → Google)에서 직접 확인
+- 평문 저장 안 함 (보안상; 이 메모리 파일은 .claude-memory/ 로 repo에 싱크되기 때문)
 - 이게 어느 프로젝트(liketica? listica?) 소속인지 불명확
 - 기존 OAuth 클라이언트는 한 번 삭제됐었음 (deleted_client 401 에러 → 새로 재발급)
 
