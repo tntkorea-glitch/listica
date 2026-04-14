@@ -2,9 +2,18 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+// 서버에서는 service_role로 RLS 우회 (route 내부에서 requireAuth로 사용자 격리 책임)
+// 클라이언트에서는 anon + 로그인 세션 → RLS 적용됨 (Realtime 구독도 세션 권한으로 수신)
+const isServer = typeof window === 'undefined';
 
 export const supabase = supabaseUrl
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? (isServer && serviceRoleKey
+      ? createClient(supabaseUrl, serviceRoleKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        })
+      : createClient(supabaseUrl, supabaseAnonKey))
   : (null as unknown as ReturnType<typeof createClient>);
 
 // Supabase는 단일 요청당 최대 1000행만 반환 (db.max-rows 기본값).
