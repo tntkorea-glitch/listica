@@ -13,8 +13,20 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     let cancelled = false;
     const go = async () => {
-      // URL 에 code 가 있으면 exchange — v2는 detectSessionInUrl=true가 기본이라 자동 처리되지만
-      // 명시적으로 한 번 더 getSession을 호출해 상태 확정
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const errorDesc = params.get('error_description');
+      if (errorDesc) {
+        if (!cancelled) router.replace(`/login?error=${encodeURIComponent(errorDesc)}`);
+        return;
+      }
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          if (!cancelled) router.replace(`/login?error=${encodeURIComponent(error.message)}`);
+          return;
+        }
+      }
       await supabase.auth.getSession();
       if (!cancelled) router.replace('/');
     };
