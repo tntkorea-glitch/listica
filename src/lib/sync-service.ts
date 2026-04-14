@@ -21,17 +21,10 @@ export async function pullSync(
     const meta = await db.sync_meta.get(userId);
     const since = meta?.last_pulled_at ?? null;
 
-    // 2. 먼저 total count 가져오기 (UI에 표시용)
-    const baseCount = supabase
-      .from('contacts')
-      .select('*', { count: 'exact', head: true });
-    const { count: totalCount, error: countErr } = await (since
-      ? baseCount.gt('updated_at', since)
-      : baseCount.is('deleted_at', null));
-    if (countErr) throw countErr;
-    const total = totalCount ?? 0;
-
-    onProgress?.({ phase: 'contacts', loaded: 0, total, message: '연락처 동기화 시작' });
+    // total count 는 RLS 정책 하에서 `exact` 가 매우 느리므로 생략.
+    // 진행률은 "로드된 건수"만 표시, total은 0으로 둠.
+    const total = 0;
+    onProgress?.({ phase: 'contacts', loaded: 0, total: 0, message: '연락처 동기화 시작...' });
 
     // 3. contacts 페이지네이션으로 pull
     let loaded = 0;
