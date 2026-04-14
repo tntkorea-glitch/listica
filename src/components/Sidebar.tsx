@@ -46,6 +46,7 @@ export default function Sidebar({
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupColor, setNewGroupColor] = useState('#6366f1');
+  const [groupsOpen, setGroupsOpen] = useState(true);
   const { user, signOut } = useAuth();
   const router = useRouter();
 
