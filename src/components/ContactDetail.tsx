@@ -98,16 +98,16 @@ export default function ContactDetail({ contact, onEdit, onDelete, onClose }: Co
       <div className="grid grid-cols-1 xl:grid-cols-[280px_minmax(0,1fr)] divide-y xl:divide-y-0 xl:divide-x divide-gray-100">
         {/* 좌측 — 기본 정보 */}
         <div>
-          <div className="p-6 space-y-1">
+          <div className="p-4 space-y-0.5">
             {fields.map((field, i) => (
-              <div key={i} className="flex items-start gap-4 py-3 border-b border-gray-100 last:border-0">
-                <field.icon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div key={i} className="flex items-start gap-3 py-2 border-b border-gray-100 last:border-0">
+                <field.icon className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs text-gray-400 mb-0.5">{field.label}</div>
+                  <div className="text-[11px] text-gray-400 mb-0.5">{field.label}</div>
                   {field.href ? (
-                    <a href={field.href} className="text-sm text-indigo-600 hover:underline break-all">{field.value}</a>
+                    <a href={field.href} className="text-xs text-indigo-600 hover:underline break-all">{field.value}</a>
                   ) : (
-                    <div className="text-sm text-gray-800 whitespace-pre-wrap">{field.value}</div>
+                    <div className="text-xs text-gray-800 whitespace-pre-wrap break-all">{field.value}</div>
                   )}
                 </div>
               </div>
