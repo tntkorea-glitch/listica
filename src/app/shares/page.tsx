@@ -104,7 +104,8 @@ function SharesInner() {
     setRedeemMsg(null);
     try {
       const res = await authFetch('/api/v1/shares/redeem', {
-        method: 'POST', body: JSON.stringify({ code }),
+        method: 'POST',
+        body: JSON.stringify({ code, main_label: mainLabelInput.trim() || undefined }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error?.message || '연결 실패');
