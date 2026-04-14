@@ -8,10 +8,15 @@ interface DuplicateSample {
   matched_by: 'phone' | 'email';
 }
 
+interface NewSample {
+  last_name: string; first_name: string; phone: string; email: string; company: string;
+}
+
 interface PreviewResult {
   total: number;
   new_count: number;
   duplicate_count: number;
+  new_samples: NewSample[];
   duplicate_samples: DuplicateSample[];
 }
 
