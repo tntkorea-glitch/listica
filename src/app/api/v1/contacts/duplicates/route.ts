@@ -12,17 +12,20 @@ export async function GET(request: NextRequest) {
 
   const mode = request.nextUrl.searchParams.get('mode') || 'exact';
 
-  const { data: contacts, error: dbError } = await supabase
-    .from('contacts')
-    .select('*')
-    .eq('user_id', user!.id)
-    .is('deleted_at', null);
-
-  if (dbError) {
-    return apiError(ErrorCodes.INTERNAL, dbError.message);
+  let contacts: Contact[];
+  try {
+    contacts = await fetchAllRows<Contact>(() =>
+      supabase
+        .from('contacts')
+        .select('*')
+        .eq('user_id', user!.id)
+        .is('deleted_at', null)
+    );
+  } catch (e) {
+    return apiError(ErrorCodes.INTERNAL, e instanceof Error ? e.message : String(e));
   }
 
-  if (!contacts?.length) {
+  if (!contacts.length) {
     return apiSuccess([]);
   }
 
