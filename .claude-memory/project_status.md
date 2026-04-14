@@ -1,6 +1,6 @@
 ---
 name: Project Status
-description: naver-contact 프로젝트 현재 진행 상태 및 다음 작업
+description: Listica 프로젝트 현재 진행 상태 및 다음 작업
 type: project
 originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
 ---
