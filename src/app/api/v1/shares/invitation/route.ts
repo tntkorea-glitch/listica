@@ -46,11 +46,12 @@ export async function POST(request: NextRequest) {
       scope,
       group_ids: scope === 'groups' ? groupIds : [],
       expires_at: expiresAt,
+      member_label: memberLabel,
     });
 
   if (dbError) return apiError(ErrorCodes.INTERNAL, dbError.message);
 
-  return apiSuccess({ code, scope, expires_at: expiresAt, group_ids: groupIds });
+  return apiSuccess({ code, scope, expires_at: expiresAt, group_ids: groupIds, member_label: memberLabel });
 }
 
 // GET /api/v1/shares/invitation — 내가 발급한 유효 코드 목록 (주로 개발용)
