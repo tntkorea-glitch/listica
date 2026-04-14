@@ -197,7 +197,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          네이버 주소록 스타일 연락처 동기화 서비스
+          Listica · 다중 기기 연락처 동기화 서비스
         </p>
       </div>
     </div>
