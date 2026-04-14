@@ -16,34 +16,41 @@ export async function GET(request: NextRequest) {
   const groupId = sp.get('group_id');
   const fields = sp.get('fields')?.split(',') || ['name', 'phone', 'email', 'company'];
 
-  let query = supabase
-    .from('contacts')
-    .select('*, contact_groups(group_id, groups:group_id(name))')
-    .eq('user_id', user!.id)
-    .is('deleted_at', null);
-
-  if (ids?.length) {
-    query = query.in('id', ids);
-  }
-
+  // groupId 필터: contact_groups에서 contact_id 목록을 먼저 가져옴 (페이지네이션)
+  let groupContactIds: string[] | null = null;
   if (groupId) {
-    const { data: cg } = await supabase
-      .from('contact_groups')
-      .select('contact_id')
-      .eq('group_id', groupId)
-      .is('removed_at', null);
-    if (cg?.length) {
-      query = query.in('id', cg.map(c => c.contact_id));
+    try {
+      const cg = await fetchAllRows<{ contact_id: string }>(() =>
+        supabase
+          .from('contact_groups')
+          .select('contact_id')
+          .eq('group_id', groupId)
+          .is('removed_at', null)
+      );
+      groupContactIds = cg.map(c => c.contact_id);
+      if (groupContactIds.length === 0) {
+        groupContactIds = ['__none__'];
+      }
+    } catch (e) {
+      return apiError(ErrorCodes.INTERNAL, e instanceof Error ? e.message : String(e));
     }
   }
 
-  const { data: contacts, error: dbError } = await query;
-
-  if (dbError) {
-    return apiError(ErrorCodes.INTERNAL, dbError.message);
+  let list: Record<string, unknown>[];
+  try {
+    list = await fetchAllRows<Record<string, unknown>>(() => {
+      let q = supabase
+        .from('contacts')
+        .select('*, contact_groups(group_id, groups:group_id(name))')
+        .eq('user_id', user!.id)
+        .is('deleted_at', null);
+      if (ids?.length) q = q.in('id', ids);
+      if (groupContactIds) q = q.in('id', groupContactIds);
+      return q;
+    });
+  } catch (e) {
+    return apiError(ErrorCodes.INTERNAL, e instanceof Error ? e.message : String(e));
   }
-
-  const list = contacts || [];
 
   if (format === 'csv' || format === 'xlsx') {
     return exportSpreadsheet(list, format, fields);
