@@ -111,7 +111,16 @@ export async function pullSync(
 
     onProgress?.({ phase: 'done', loaded: countAll, total: countAll, message: '동기화 완료' });
   } catch (e) {
-    onProgress?.({ phase: 'error', loaded: 0, total: 0, message: e instanceof Error ? e.message : '알 수 없는 오류' });
+    let msg: string;
+    if (e instanceof Error) msg = e.message;
+    else if (typeof e === 'object' && e !== null) {
+      const anyE = e as { message?: string; details?: string; code?: string; hint?: string };
+      msg = [anyE.message, anyE.details, anyE.code, anyE.hint].filter(Boolean).join(' · ') || JSON.stringify(e);
+    } else {
+      msg = String(e);
+    }
+    console.error('[pullSync] error', e);
+    onProgress?.({ phase: 'error', loaded: 0, total: 0, message: msg });
     throw e;
   }
 }
