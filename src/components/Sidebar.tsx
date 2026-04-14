@@ -231,11 +231,10 @@ export default function Sidebar({
             </div>
           ))}
         </div>
+      </nav>
 
-        {/* 구분선 */}
-        <div className="border-t border-gray-200 my-2" />
-
-        {/* 하단 유틸 메뉴 */}
+      {/* 하단 유틸 메뉴 — 그룹과 분리된 별도 섹션 */}
+      <div className="p-2 border-t border-gray-200 space-y-0.5 flex-shrink-0">
         <button onClick={onOpenImport} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
           <span>연락처 불러오기</span>
@@ -252,7 +251,7 @@ export default function Sidebar({
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" /></svg>
           <span>서브 기기 관리</span>
         </a>
-      </nav>
+      </div>
 
       {/* 하단 */}
       <div className="p-3 border-t border-gray-200 space-y-1">
