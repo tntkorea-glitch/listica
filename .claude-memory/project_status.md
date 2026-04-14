@@ -21,6 +21,7 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
 - **환경설정 모달** — 정렬기준, 노출개수, 그룹관리, 연락처복원, 프라이버시 탭
 - 인증 bypass 적용 중 (테스트용, TODO: 나중에 복원)
 - 빌드 성공 + GitHub 푸시 완료
+- **xlsx import 중복검사 추가 (2026-04-14)** — preview/save 2단계, 매칭 기준=전화번호 끝8자리 + 이메일, 중복 제외 토글 + 비교 테이블 UI
 
 ## Supabase 설정
 - Organization: milveus-glitch's Project (Pro Plan $25/월)
