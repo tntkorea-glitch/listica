@@ -295,17 +295,28 @@ function ContactsApp() {
 
       {/* 메인 콘텐츠 */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-          <div className="relative flex-1 max-w-md">
+        <header className="bg-white border-b border-gray-200 px-3 lg:px-4 py-3 flex items-center gap-2 lg:gap-3">
+          {/* 모바일 햄버거 */}
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg flex-shrink-0"
+            title="메뉴"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          <div className="relative flex-1 max-w-md min-w-0">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
               type="text"
-              placeholder="이름, 전화번호, 이메일 검색..."
+              placeholder="이름·전화·이메일 검색"
               value={searchInput}
               onChange={e => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-transparent text-sm"
+              className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white focus:border-transparent text-sm"
             />
           </div>
 
