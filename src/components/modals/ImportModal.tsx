@@ -78,7 +78,7 @@ export default function ImportModal({ onPreview, onSave, onClose }: ImportModalP
           {step === 'pick' && (
             <>
               <p className="text-sm text-gray-500 mb-4">
-                네이버 주소록 엑셀(.xlsx) 또는 vCard(.vcf) 파일을 선택하면<br />
+                엑셀(.xlsx) 또는 vCard(.vcf) 파일을 선택하면<br />
                 기존 연락처와 비교 후 신규/중복을 확인해 드립니다.
               </p>
               {errMsg && <div className="mb-3 px-3 py-2 bg-red-50 text-red-600 text-sm rounded-lg">{errMsg}</div>}
