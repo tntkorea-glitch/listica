@@ -19,14 +19,16 @@ export async function GET(request: NextRequest) {
     return apiError(ErrorCodes.INTERNAL, dbError.message);
   }
 
-  // 그룹별 연락처 수
-  const { data: counts } = await supabase
-    .from('contact_groups')
-    .select('group_id')
-    .is('removed_at', null);
+  // 그룹별 연락처 수 — 1000행 limit 우회 위해 페이지네이션
+  const counts = await fetchAllRows<{ group_id: string }>(() =>
+    supabase
+      .from('contact_groups')
+      .select('group_id')
+      .is('removed_at', null)
+  );
 
   const countMap: Record<string, number> = {};
-  counts?.forEach(c => {
+  counts.forEach(c => {
     countMap[c.group_id] = (countMap[c.group_id] || 0) + 1;
   });
 
