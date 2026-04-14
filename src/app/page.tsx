@@ -363,6 +363,11 @@ function ContactsApp() {
               </div>
             )}
           </div>
+          {/* 리사이즈 핸들 (목록 / 상세보기 사이) */}
+          <div
+            onMouseDown={handleListMouseDown}
+            className="w-1 cursor-col-resize hover:bg-indigo-300 active:bg-indigo-400 transition-colors flex-shrink-0 border-r border-gray-200"
+          />
           <ContactDetail
             contact={selectedContact}
             onEdit={() => { if (selectedContact) { setEditingContact(selectedContact); setShowForm(true); } }}
