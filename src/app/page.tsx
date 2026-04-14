@@ -261,10 +261,10 @@ function ContactsApp() {
       {/* 사이드바 — PC: inline, 모바일: drawer */}
       <aside
         className={`bg-white border-r border-gray-200 flex-shrink-0 z-40
-          fixed inset-y-0 left-0 transition-transform duration-200
-          lg:static lg:translate-x-0
+          fixed inset-y-0 left-0 w-72 transition-transform duration-200
+          lg:static lg:w-auto lg:translate-x-0
           ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
-        style={{ width: sidebarWidth }}
+        style={isWide ? { width: sidebarWidth } : undefined}
       >
         <Sidebar
           groups={groups}
