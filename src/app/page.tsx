@@ -245,38 +245,52 @@ function ContactsApp() {
 
   const totalPages = Math.ceil(total / pageSize);
 
+  const closeSidebar = () => setMobileSidebarOpen(false);
+  const wrapSidebarAction = (fn: () => void) => () => { fn(); closeSidebar(); };
+
   return (
     <div className="h-screen flex overflow-hidden bg-gray-50">
-      {/* 사이드바 */}
-      <aside className="bg-white border-r border-gray-200 flex-shrink-0" style={{ width: sidebarWidth }}>
+      {/* 사이드바 — PC: inline, 모바일: drawer */}
+      <aside
+        className={`bg-white border-r border-gray-200 flex-shrink-0 z-40
+          fixed inset-y-0 left-0 transition-transform duration-200
+          lg:static lg:translate-x-0
+          ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        style={{ width: sidebarWidth }}
+      >
         <Sidebar
           groups={groups}
           selectedGroup={selectedGroup}
-          onSelectGroup={id => resetFilters({ group: id })}
-          onSelectAll={() => resetFilters()}
-          onSelectFavorites={() => resetFilters({ favorites: true })}
+          onSelectGroup={wrapSidebarAction(id => resetFilters({ group: id }) as unknown as void) as unknown as (id: string) => void}
+          onSelectAll={wrapSidebarAction(() => resetFilters())}
+          onSelectFavorites={wrapSidebarAction(() => resetFilters({ favorites: true }))}
           showFavorites={showFavorites}
           totalContacts={total}
           onCreateGroup={createGroup}
           onDeleteGroup={deleteGroup}
-          onSelectTrash={() => resetFilters({ trash: true })}
+          onSelectTrash={wrapSidebarAction(() => resetFilters({ trash: true }))}
           showTrash={showTrash}
-          onSelectNoName={() => resetFilters({ noName: true })}
+          onSelectNoName={wrapSidebarAction(() => resetFilters({ noName: true }))}
           showNoName={showNoName}
-          onOpenSettings={() => setShowSettings(true)}
-          onOpenImport={() => setShowImport(true)}
-          onOpenExport={() => setShowExport(true)}
-          onOpenDuplicates={() => setShowDuplicates(true)}
-          onCreateContact={() => { setEditingContact(null); setShowForm(true); }}
-          onSelectRecent={handleSelectRecent}
+          onOpenSettings={wrapSidebarAction(() => setShowSettings(true))}
+          onOpenImport={wrapSidebarAction(() => setShowImport(true))}
+          onOpenExport={wrapSidebarAction(() => setShowExport(true))}
+          onOpenDuplicates={wrapSidebarAction(() => setShowDuplicates(true))}
+          onCreateContact={wrapSidebarAction(() => { setEditingContact(null); setShowForm(true); })}
+          onSelectRecent={wrapSidebarAction(handleSelectRecent)}
           showRecent={showRecent}
         />
       </aside>
 
-      {/* 리사이즈 핸들 */}
+      {/* 모바일 backdrop */}
+      {mobileSidebarOpen && (
+        <div onClick={closeSidebar} className="fixed inset-0 bg-black/40 z-30 lg:hidden" />
+      )}
+
+      {/* 리사이즈 핸들 — PC에서만 */}
       <div
         onMouseDown={handleSidebarMouseDown}
-        className="w-1 cursor-col-resize hover:bg-indigo-300 active:bg-indigo-400 transition-colors flex-shrink-0"
+        className="hidden lg:block w-1 cursor-col-resize hover:bg-indigo-300 active:bg-indigo-400 transition-colors flex-shrink-0"
       />
 
       {/* 메인 콘텐츠 */}
