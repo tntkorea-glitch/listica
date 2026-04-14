@@ -122,29 +122,76 @@ export default function ImportModal({ onPreview, onSave, onClose }: ImportModalP
               </div>
 
               {preview.duplicate_count > 0 && (
-                <>
-                  <label className="flex items-center gap-2 mb-4 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={skipDuplicates}
-                      onChange={e => setSkipDuplicates(e.target.checked)}
-                      className="w-4 h-4 accent-indigo-600"
-                    />
-                    <span className="text-sm text-gray-700">
-                      중복 연락처 <b>{preview.duplicate_count.toLocaleString()}</b>건 제외하고 저장
-                    </span>
-                  </label>
+                <label className="flex items-center gap-2 mb-4 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={skipDuplicates}
+                    onChange={e => setSkipDuplicates(e.target.checked)}
+                    className="w-4 h-4 accent-indigo-600"
+                  />
+                  <span className="text-sm text-gray-700">
+                    중복 연락처 <b>{preview.duplicate_count.toLocaleString()}</b>건 제외하고 저장
+                  </span>
+                </label>
+              )}
 
-                  <div className="border border-gray-200 rounded-xl overflow-hidden">
-                    <div className="px-4 py-2 bg-gray-50 text-xs font-medium text-gray-600 border-b border-gray-200">
-                      중복 항목 미리보기 (최대 50건 — 매칭 기준: 전화번호 끝 8자리 / 이메일)
-                    </div>
+              {(preview.new_count > 0 || preview.duplicate_count > 0) && (
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="flex border-b border-gray-200 bg-gray-50">
+                    <button
+                      onClick={() => setTab('new')}
+                      disabled={preview.new_count === 0}
+                      className={`flex-1 px-4 py-2.5 text-xs font-medium transition-colors ${tab === 'new' ? 'bg-white text-emerald-700 border-b-2 border-emerald-500 -mb-px' : 'text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed'}`}
+                    >
+                      신규 {preview.new_count.toLocaleString()}건
+                    </button>
+                    <button
+                      onClick={() => setTab('duplicate')}
+                      disabled={preview.duplicate_count === 0}
+                      className={`flex-1 px-4 py-2.5 text-xs font-medium transition-colors ${tab === 'duplicate' ? 'bg-white text-amber-700 border-b-2 border-amber-500 -mb-px' : 'text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed'}`}
+                    >
+                      중복 {preview.duplicate_count.toLocaleString()}건
+                    </button>
+                  </div>
+
+                  {tab === 'new' && (
                     <div className="max-h-72 overflow-y-auto">
+                      <div className="px-4 py-2 bg-emerald-50 text-[11px] text-emerald-700 border-b border-emerald-100">
+                        등록될 신규 연락처 미리보기 (최대 50건)
+                      </div>
+                      <table className="w-full text-xs">
+                        <thead className="bg-gray-50 sticky top-0">
+                          <tr className="text-gray-500">
+                            <th className="px-3 py-2 text-left font-medium">이름</th>
+                            <th className="px-3 py-2 text-left font-medium">전화번호</th>
+                            <th className="px-3 py-2 text-left font-medium">이메일</th>
+                            <th className="px-3 py-2 text-left font-medium">회사·소속</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {preview.new_samples.map((s, i) => (
+                            <tr key={i} className="border-t border-gray-100">
+                              <td className="px-3 py-2 font-medium text-gray-700">{s.last_name}{s.first_name || <span className="text-gray-400">—</span>}</td>
+                              <td className="px-3 py-2 text-gray-600">{s.phone || <span className="text-gray-400">—</span>}</td>
+                              <td className="px-3 py-2 text-gray-500 truncate max-w-[180px]">{s.email || <span className="text-gray-400">—</span>}</td>
+                              <td className="px-3 py-2 text-gray-500 truncate max-w-[140px]">{s.company || <span className="text-gray-400">—</span>}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {tab === 'duplicate' && (
+                    <div className="max-h-72 overflow-y-auto">
+                      <div className="px-4 py-2 bg-amber-50 text-[11px] text-amber-700 border-b border-amber-100">
+                        중복 항목 (최대 50건) — 매칭 기준: 전화번호 끝 8자리 / 이메일
+                      </div>
                       <table className="w-full text-xs">
                         <thead className="bg-gray-50 sticky top-0">
                           <tr className="text-gray-500">
                             <th className="px-3 py-2 text-left font-medium w-14">매칭</th>
-                            <th className="px-3 py-2 text-left font-medium">새 파일 (불러올 항목)</th>
+                            <th className="px-3 py-2 text-left font-medium">새 파일</th>
                             <th className="px-3 py-2 text-left font-medium">기존 연락처</th>
                           </tr>
                         </thead>
@@ -159,25 +206,19 @@ export default function ImportModal({ onPreview, onSave, onClose }: ImportModalP
                               <td className="px-3 py-2 text-gray-700">
                                 <div className="font-medium">{s.incoming.last_name}{s.incoming.first_name}</div>
                                 <div className="text-gray-500">{s.incoming.phone}</div>
-                                {s.incoming.email && <div className="text-gray-400 truncate max-w-[200px]">{s.incoming.email}</div>}
+                                {s.incoming.email && <div className="text-gray-400 truncate max-w-[180px]">{s.incoming.email}</div>}
                               </td>
                               <td className="px-3 py-2 text-gray-700">
                                 <div className="font-medium">{s.existing.last_name}{s.existing.first_name}</div>
                                 <div className="text-gray-500">{s.existing.phone}</div>
-                                {s.existing.email && <div className="text-gray-400 truncate max-w-[200px]">{s.existing.email}</div>}
+                                {s.existing.email && <div className="text-gray-400 truncate max-w-[180px]">{s.existing.email}</div>}
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
-                  </div>
-                </>
-              )}
-
-              {preview.duplicate_count === 0 && (
-                <div className="px-4 py-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg">
-                  중복 항목이 없습니다. 모두 신규로 등록됩니다.
+                  )}
                 </div>
               )}
 
