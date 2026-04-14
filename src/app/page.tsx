@@ -379,8 +379,12 @@ function ContactsApp() {
           </div>
         )}
 
-        <div className="flex-1 flex min-h-0" ref={listAreaRef}>
-          <div className="flex flex-col bg-white flex-shrink-0" style={{ width: listWidth }}>
+        <div className="flex-1 flex min-h-0 relative" ref={listAreaRef}>
+          {/* 리스트 — PC에선 고정폭, 모바일에선 전체폭 */}
+          <div
+            className={`flex flex-col bg-white ${selectedContact ? 'hidden lg:flex' : 'flex'} flex-shrink-0 w-full lg:w-auto`}
+            style={typeof window !== 'undefined' && window.innerWidth >= 1024 ? { width: listWidth } : undefined}
+          >
             <ContactList
               contacts={contacts}
               loading={loading}
