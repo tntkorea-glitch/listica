@@ -246,7 +246,7 @@ function ContactsApp() {
   const totalPages = Math.ceil(total / pageSize);
 
   const closeSidebar = () => setMobileSidebarOpen(false);
-  const wrapSidebarAction = (fn: () => void) => () => { fn(); closeSidebar(); };
+  const w = (fn: () => void) => () => { fn(); closeSidebar(); };
 
   return (
     <div className="h-screen flex overflow-hidden bg-gray-50">
