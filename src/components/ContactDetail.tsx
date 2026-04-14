@@ -50,13 +50,15 @@ export default function ContactDetail({ contact, onEdit, onDelete, onClose }: Co
   return (
     <div className="flex-1 bg-white overflow-y-auto">
       {/* 상단 프로필 — 컴팩트 */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3 text-white relative flex items-center gap-3">
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-3 lg:px-5 py-3 text-white flex items-center gap-3">
+        {/* 모바일 뒤로가기 */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 p-1 rounded-full hover:bg-white/20 transition-colors lg:hidden"
+          className="lg:hidden p-1 rounded-full hover:bg-white/20 transition-colors flex-shrink-0"
+          title="뒤로가기"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
