@@ -132,6 +132,17 @@ function exportVCard(contacts: any[]) {
     if (c.position) lines.push(`TITLE:${c.position}`);
     if (c.address) lines.push(`ADR;TYPE=HOME:;;${c.address};;;;`);
     if (c.memo) lines.push(`NOTE:${c.memo}`);
+    // 그룹 — CATEGORIES 필드 (iOS/macOS: 그룹으로 인식, Android: 기종별로 라벨 변환)
+    const groupNames = (c.contact_groups as { groups?: { name?: string } }[] | undefined)
+      ?.map(g => g.groups?.name)
+      .filter(Boolean) as string[] | undefined;
+    if (groupNames && groupNames.length > 0) {
+      // vCard CATEGORIES는 쉼표 구분. 쉼표/세미콜론은 백슬래시 이스케이프
+      const escaped = groupNames.map(n => n.replace(/([,;\\])/g, '\\$1'));
+      lines.push(`CATEGORIES:${escaped.join(',')}`);
+      // Apple 특화 X-ADDRESSBOOKSERVER-KIND (일부 iOS 버전에서 그룹 인식 강화)
+      // - 없어도 CATEGORIES로 충분. 생략.
+    }
     lines.push('END:VCARD');
     return lines.join('\r\n');
   });
