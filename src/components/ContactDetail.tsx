@@ -1,6 +1,7 @@
 'use client';
 
 import { Contact } from '@/lib/supabase';
+import CustomerInsightsPanel from './CustomerInsights';
 
 interface ContactDetailProps {
   contact: Contact | null;
