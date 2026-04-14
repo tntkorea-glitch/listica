@@ -60,31 +60,65 @@ export default function Sidebar({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* 로고 */}
-      <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
+      {/* 로고 — 클릭 시 홈(전체 연락처)으로 */}
+      <button
+        onClick={onSelectAll}
+        className="px-4 py-3 border-b border-gray-200 flex items-center gap-2 hover:bg-gray-50 transition-colors text-left"
+        title="홈으로"
+      >
         <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
         <h1 className="text-lg font-bold text-gray-800">주소록</h1>
+      </button>
+
+      {/* 빠른 액션: 연락처 추가 / 그룹 추가 */}
+      <div className="px-3 pt-3 pb-2 grid grid-cols-2 gap-2">
+        <button
+          onClick={onCreateContact}
+          className="px-3 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+        >
+          연락처 추가
+        </button>
+        <button
+          onClick={() => setShowNewGroup(true)}
+          className="px-3 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+        >
+          그룹 추가
+        </button>
+      </div>
+
+      {/* 빠른 탭: 최근등록 / 즐겨찾기 */}
+      <div className="px-3 pb-2 grid grid-cols-2 gap-1 text-xs">
+        <button
+          onClick={onSelectRecent}
+          className={`flex flex-col items-center gap-1 py-2 rounded-lg transition-colors ${showRecent ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>최근등록</span>
+        </button>
+        <button
+          onClick={onSelectFavorites}
+          className={`flex flex-col items-center gap-1 py-2 rounded-lg transition-colors ${showFavorites ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}
+        >
+          <svg className="w-4 h-4" fill={showFavorites ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+          <span>즐겨찾기</span>
+        </button>
       </div>
 
       {/* 네비게이션 */}
-      <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto p-2 space-y-0.5 border-t border-gray-100 pt-2">
         {/* 전체 연락처 */}
-        <button onClick={onSelectAll} className={navBtn(!selectedGroup && !showFavorites && !showTrash && !showNoName)}>
+        <button onClick={onSelectAll} className={navBtn(!selectedGroup && !showFavorites && !showTrash && !showNoName && !showRecent)}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
           </svg>
           <span>전체 연락처</span>
           <span className="ml-auto text-xs text-gray-400">{totalContacts}</span>
-        </button>
-
-        {/* 즐겨찾기 */}
-        <button onClick={onSelectFavorites} className={navBtn(showFavorites === true)}>
-          <svg className="w-5 h-5" fill={showFavorites ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-          </svg>
-          <span>즐겨찾기</span>
         </button>
 
         {/* 휴지통 */}
