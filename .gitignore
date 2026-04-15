@@ -47,3 +47,4 @@ next-env.d.ts
 *.pfx
 secrets/
 credentials*.json
+.env*.local
