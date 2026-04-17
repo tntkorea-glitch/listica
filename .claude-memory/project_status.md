@@ -36,6 +36,17 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
 - Region: Northeast Asia (Seoul)
 - 이메일 인증: 아직 비활성화 안 됨 (Supabase Auth 설정에서 Confirm email OFF 필요)
 
+## 진행 (2026-04-18) — listica → contica 전체 리네임
+- **웹 리네임 완료** (`143c595` 푸시): package/UI 브랜드/Dexie DB 이름/메모리 파일 전부 listica→contica 치환
+- **모바일 리네임 + 스캐폴딩 커밋** (`3906c54` 푸시): package/app.json(slug/bundleId/package)/types/login 리네임 + 이전 세션 미커밋 스캐폴딩(tabs, contexts/AuthContext, lib/supabase, app/login.tsx) 동시 커밋
+- **메모리 파일명 변경**: `project_listica_mobile.md` → `project_contica_mobile.md`
+- **배치 스크립트 작성**: `D:\dev\rename-to-contica.bat` (Claude 종료 후 사용자 실행)
+- ⚠️ 아직 안 한 것 (사용자 수동):
+  1. Claude 종료 후 `D:\dev\rename-to-contica.bat` 실행 — 폴더 2개 + 메모리 폴더 rename
+  2. GitHub 대시보드에서 repo 2개 rename (listica → contica, listica-mobile → contica-mobile)
+  3. 각 repo에서 `git remote set-url origin https://github.com/tntkorea-glitch/contica{,−mobile}.git`
+  4. Vercel 대시보드에서 프로젝트 이름 변경 (listica-contact → contica 또는 원하는 이름)
+
 ## 진행 (2026-04-15 새 PC 이어서)
 - 새 PC(`C:\Users\a0109`) 셋업 완료: npm install, vercel env pull, gitleaks pre-commit
 - 웹 `npm run build` 성공 확인
@@ -52,14 +63,14 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
   - `npx tsc --noEmit` 통과
 
 ## Next up when resuming
+0. **⚠️ 먼저 rename-to-contica.bat 실행 + GitHub/Vercel 대시보드 rename** (위 진행 2026-04-18 참고)
 1. **실기기에서 Expo Go 테스트** — `cd D:\dev\contica-mobile && npm start` → QR 스캔. 로그인·리스트 동작 확인
-2. **contica-mobile GitHub 원격 repo 생성 + push** (사용자 확인 후)
-3. **연락처 추가/수정 폼 화면** 구현
-4. **폰 기본 연락처 sync** (expo-contacts) — 가져오기/내보내기
-5. **Google OAuth 정리** — issue_oauth_tangled.md 참고 (Google Cloud Console 정리 후 Supabase Provider 재등록)
-6. **카카오/네이버 로그인** 실제 구현
-7. **두번째 xlsx 파일 import** (92935659, 16,968건 — 사용자가 웹 UI에서 실행)
-8. **Realtime 구독 추가** — 현재 postgres_changes 미구현. 웹/모바일 모두 새로고침/포커스 기반
+2. **연락처 추가/수정 폼 화면** 구현
+3. **폰 기본 연락처 sync** (expo-contacts) — 가져오기/내보내기
+4. **Google OAuth 정리** — issue_oauth_tangled.md 참고 (Google Cloud Console 정리 후 Supabase Provider 재등록)
+5. **카카오/네이버 로그인** 실제 구현
+6. **두번째 xlsx 파일 import** (92935659, 16,968건 — 사용자가 웹 UI에서 실행)
+7. **Realtime 구독 추가** — 현재 postgres_changes 미구현. 웹/모바일 모두 새로고침/포커스 기반
 
 **Why:** 웹은 실사용 가능 상태. 최종 목표는 React Native 앱 + 앱스토어 배포.
 **How to apply:** 모바일 앱 타입은 현재 수동 복제. 나중에 양쪽 모두 커지면 `packages/shared` 로 추출 검토.
