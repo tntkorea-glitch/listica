@@ -45,6 +45,11 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
   - useContacts: auth loading/session 대기 후 fetch (첫 렌더 401 회피)
   - api-auth.ts: `supabaseAdmin.auth.getUser()` → `fetch /auth/v1/user` REST 직접 호출 + 로컬 JWT decode 폴백
 - **프로덕션 테스트 완료**: contica.vercel.app에서 Google 로그인 + 연락처 31,164건 정상 조회
+- **모바일(contica-mobile) 실기기 테스트 완료**:
+  - `lib/supabase.ts` SSR crash 수정 (Expo Router pre-render 단계에서 AsyncStorage `window` 참조 이슈 — `typeof window !== 'undefined'` 분기 추가)
+  - 본 계정에 비밀번호 SQL로 직접 설정 (`update auth.users set encrypted_password = crypt(...) where email = ...`) — 이메일/비번 로그인 가능하게
+  - Expo Go로 실기기 접속 → 본 계정 31,164건 정상 조회
+  - 모바일 Google OAuth는 미완 — `.env`의 Google Client ID들이 구 프로젝트(삭제됨) 것. iOS/Android용 새 Client 재발급 필요 (번들 ID + SHA-1 지문)
 
 ## 진행 (2026-04-19) — OAuth 재셋팅 + Vercel/Supabase 브랜드 정리 완료
 - **Google Cloud**: 구 liketica/listica/contica 프로젝트 **전부 삭제** → 새 `contica` 프로젝트 단독 생성
@@ -88,13 +93,14 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
 
 ## Next up when resuming
 1. **⚠️ Supabase Service Role key Reset** — 이전 세션 대화 로그에 평문 노출된 상태. Supabase 대시보드에서 재발급 → Vercel env SUPABASE_SERVICE_ROLE_KEY 업데이트 → 재배포. 보안 마감.
-2. **Vercel Preview 환경 NEXT_PUBLIC_SUPABASE_ANON_KEY 추가** — CLI에서 Preview 등록이 실패해서 빠짐. UI에서 수동 추가 또는 CLI 재시도
-3. **실기기에서 Expo Go 테스트** — `cd D:\dev\contica-mobile && npm start` → QR 스캔. 로그인·리스트 동작 확인
-4. **연락처 추가/수정 폼 화면** 구현 (모바일)
-5. **폰 기본 연락처 sync** (expo-contacts) — 가져오기/내보내기
-6. **카카오/네이버 로그인** 실제 구현
-7. **Realtime 구독 추가** — 현재 postgres_changes 미구현. 웹/모바일 모두 새로고침/포커스 기반
-8. **`contica.co.kr` 도메인 구매** → Vercel 커스텀 도메인 연결 + OAuth origins 추가
+2. **⚠️ 본 계정 비밀번호 변경** — SQL로 임시 설정한 비밀번호가 대화 로그에 남을 수 있음. 앱에서 "비밀번호 변경" 또는 Supabase reset으로 새 값으로 교체.
+3. **Vercel Preview 환경 NEXT_PUBLIC_SUPABASE_ANON_KEY 추가** — CLI Preview 등록 실패 건. UI에서 수동 추가.
+4. **모바일 Google OAuth 재셋팅** — iOS/Android용 OAuth Client ID 새로 발급 (Google Cloud Console에서 번들 ID `com.tntkorea.conticamobile` + Android SHA-1). 완료 후 `.env` EXPO_PUBLIC_GOOGLE_*_CLIENT_ID 갱신.
+5. **폰 기본 연락처 실시간 동기화** (사용자 우선 요구) — expo-contacts로 iOS/Android 내장 연락처 읽기·쓰기 + 앱↔폰 양방향 sync. MVP는 "앱 포그라운드 복귀 시 diff sync", v2에서 native ContactsObserver로 실시간 감지 검토.
+6. **연락처 추가/수정 폼 화면** 구현 (모바일)
+7. **카카오/네이버 로그인** 실제 구현
+8. **Realtime 구독 추가** — 현재 postgres_changes 미구현. 웹/모바일 모두 새로고침/포커스 기반
+9. **`contica.co.kr` 도메인 구매** → Vercel 커스텀 도메인 연결 + OAuth origins 추가
 
 **Why:** 웹은 실사용 가능 상태. 최종 목표는 React Native 앱 + 앱스토어 배포.
 **How to apply:** 모바일 앱 타입은 현재 수동 복제. 나중에 양쪽 모두 커지면 `packages/shared` 로 추출 검토.
