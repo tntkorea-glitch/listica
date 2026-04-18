@@ -45,10 +45,12 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
   - useContacts: auth loading/session 대기 후 fetch (첫 렌더 401 회피)
   - api-auth.ts: `supabaseAdmin.auth.getUser()` → `fetch /auth/v1/user` REST 직접 호출 + 로컬 JWT decode 폴백
 - **프로덕션 테스트 완료**: contica.vercel.app에서 Google 로그인 + 연락처 31,164건 정상 조회
-- **모바일(contica-mobile) 실기기 테스트 완료**:
+- **모바일(contica-mobile) 실기기 환경 준비 중** (2026-04-19 늦밤):
   - `lib/supabase.ts` SSR crash 수정 (Expo Router pre-render 단계에서 AsyncStorage `window` 참조 이슈 — `typeof window !== 'undefined'` 분기 추가)
-  - 모바일 Google OAuth 404 발생 — `.env`의 Google Client ID들이 구(삭제된) 프로젝트 것이라 Google이 "없는 client"로 거부. iOS/Android용 새 Client 재발급 필요 (번들 `com.tntkorea.conticamobile` + SHA-1 지문)
-  - 우회: 본 계정에 비밀번호 SQL로 직접 설정 (`update auth.users set encrypted_password = crypt(...) where email = ...`) → 모바일에서 **이메일+비번으로 본 계정 로그인** → 31,164건 정상 조회
+  - Metro 서버 기동 확인 (http://192.168.0.30:8081 → 200)
+  - Expo Go QR 스캔 시 404 — 사용자 스크린샷은 `accounts.google.com/sig...` 404. 원인 추정: 앱 진입 과정에서 Google OAuth 자동 시도 (구 Client ID 때문) 또는 앱 번들 로드 실패. 아직 모바일 앱 내부 UI를 **본 적 없음**.
+  - 본 계정 비번 SQL로 설정 완료 (이메일/비번 로그인 대기)
+  - **⏳ 미완**: Expo Go 진입 성공 + 이메일+비번으로 본 계정 로그인 + 연락처 31,164건 조회 — 다음 세션 이어서
 
 ## 진행 (2026-04-19) — OAuth 재셋팅 + Vercel/Supabase 브랜드 정리 완료
 - **Google Cloud**: 구 liketica/listica/contica 프로젝트 **전부 삭제** → 새 `contica` 프로젝트 단독 생성
