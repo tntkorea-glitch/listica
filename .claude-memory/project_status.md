@@ -41,11 +41,14 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
 - **모바일 리네임 + 스캐폴딩 커밋** (`3906c54` 푸시): package/app.json(slug/bundleId/package)/types/login 리네임 + 이전 세션 미커밋 스캐폴딩(tabs, contexts/AuthContext, lib/supabase, app/login.tsx) 동시 커밋
 - **메모리 파일명 변경**: `project_listica_mobile.md` → `project_contica_mobile.md`
 - **배치 스크립트 작성**: `D:\dev\rename-to-contica.bat` (Claude 종료 후 사용자 실행)
+- **SQL 헤더 주석 정리 + auto-commit** (`2a33fb3`): supabase-schema.sql / supabase-migration.sql 첫 줄 "네이버주소록 클론" → "contica"
+- **GitHub repo 2개 rename 완료** (사용자 대시보드 작업): listica → contica, listica-mobile → contica-mobile
+- **git remote URL 두 폴더 모두 업데이트**: contica.git / contica-mobile.git
+- **웹 push 완료** (`2a33fb3` → origin/master on new repo)
 - ⚠️ 아직 안 한 것 (사용자 수동):
   1. Claude 종료 후 `D:\dev\rename-to-contica.bat` 실행 — 폴더 2개 + 메모리 폴더 rename
-  2. GitHub 대시보드에서 repo 2개 rename (listica → contica, listica-mobile → contica-mobile)
-  3. 각 repo에서 `git remote set-url origin https://github.com/tntkorea-glitch/contica{,−mobile}.git`
-  4. Vercel 대시보드에서 프로젝트 이름 변경 (listica-contact → contica 또는 원하는 이름)
+  2. Vercel 대시보드에서 프로젝트 이름 변경 (contica-contact 또는 listica-contact → contica)
+  3. 배치 실행 후 새 `D:\dev\contica` 폴더에서 Claude 열고 `/toto` 로 재개
 
 ## 진행 (2026-04-15 새 PC 이어서)
 - 새 PC(`C:\Users\a0109`) 셋업 완료: npm install, vercel env pull, gitleaks pre-commit
