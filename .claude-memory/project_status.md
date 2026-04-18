@@ -36,6 +36,16 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
 - Region: Northeast Asia (Seoul)
 - 이메일 인증: 아직 비활성화 안 됨 (Supabase Auth 설정에서 Confirm email OFF 필요)
 
+## 진행 (2026-04-19 늦밤) — 프로덕션 OAuth + 데이터 조회 완전 복구
+- **Vercel 도메인 전환**: `naver-contact` → `contica.vercel.app` rename + Production 연결. `listica-contact`/`contica-contact` alias 전부 제거. 새 primary URL: **https://contica.vercel.app**
+- **Supabase URL Config**: Site URL + Redirect URLs 모두 `contica.vercel.app/**`로 정렬
+- **500 Invalid API key 이슈 해결**: Vercel env의 구 Supabase anon/service_role key를 최신 값으로 갱신. 원인은 Supabase Asymmetric JWT(ES256) 전환으로 구 HS256 API key가 invalidate. 상세: feedback_supabase_api_key_rotation.md
+- **코드 수정** (commits 38a80a1, 8032da1, 1882ddf):
+  - useAuth.getAccessToken: `state.session.access_token` 직접 참조 (race condition 해결)
+  - useContacts: auth loading/session 대기 후 fetch (첫 렌더 401 회피)
+  - api-auth.ts: `supabaseAdmin.auth.getUser()` → `fetch /auth/v1/user` REST 직접 호출 + 로컬 JWT decode 폴백
+- **프로덕션 테스트 완료**: contica.vercel.app에서 Google 로그인 + 연락처 31,164건 정상 조회
+
 ## 진행 (2026-04-19) — OAuth 재셋팅 + Vercel/Supabase 브랜드 정리 완료
 - **Google Cloud**: 구 liketica/listica/contica 프로젝트 **전부 삭제** → 새 `contica` 프로젝트 단독 생성
   - OAuth consent screen External + Test user 등록
@@ -77,13 +87,14 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
   - `npx tsc --noEmit` 통과
 
 ## Next up when resuming
-1. **실기기에서 Expo Go 테스트** — `cd D:\dev\contica-mobile && npm start` → QR 스캔. 로그인·리스트 동작 확인
-2. **연락처 추가/수정 폼 화면** 구현 (모바일)
-3. **폰 기본 연락처 sync** (expo-contacts) — 가져오기/내보내기
-4. **Vercel 배포에서 구글 로그인 동작 확인** — contica.vercel.app에서도 OAuth flow 테스트
-5. **카카오/네이버 로그인** 실제 구현
-6. **Realtime 구독 추가** — 현재 postgres_changes 미구현. 웹/모바일 모두 새로고침/포커스 기반
-7. **`contica.co.kr` 도메인 구매** → Vercel 커스텀 도메인 연결 + OAuth origins 추가
+1. **⚠️ Supabase Service Role key Reset** — 이전 세션 대화 로그에 평문 노출된 상태. Supabase 대시보드에서 재발급 → Vercel env SUPABASE_SERVICE_ROLE_KEY 업데이트 → 재배포. 보안 마감.
+2. **Vercel Preview 환경 NEXT_PUBLIC_SUPABASE_ANON_KEY 추가** — CLI에서 Preview 등록이 실패해서 빠짐. UI에서 수동 추가 또는 CLI 재시도
+3. **실기기에서 Expo Go 테스트** — `cd D:\dev\contica-mobile && npm start` → QR 스캔. 로그인·리스트 동작 확인
+4. **연락처 추가/수정 폼 화면** 구현 (모바일)
+5. **폰 기본 연락처 sync** (expo-contacts) — 가져오기/내보내기
+6. **카카오/네이버 로그인** 실제 구현
+7. **Realtime 구독 추가** — 현재 postgres_changes 미구현. 웹/모바일 모두 새로고침/포커스 기반
+8. **`contica.co.kr` 도메인 구매** → Vercel 커스텀 도메인 연결 + OAuth origins 추가
 
 **Why:** 웹은 실사용 가능 상태. 최종 목표는 React Native 앱 + 앱스토어 배포.
 **How to apply:** 모바일 앱 타입은 현재 수동 복제. 나중에 양쪽 모두 커지면 `packages/shared` 로 추출 검토.

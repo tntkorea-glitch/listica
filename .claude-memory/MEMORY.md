@@ -2,3 +2,4 @@
 - [Project Init](project_init.md) — contica 프로젝트 생성 정보
 - [Project Status](project_status.md) — 현재 진행 상태 및 다음 작업
 - [contica-mobile](project_contica_mobile.md) — Expo 앱 위치·구조·실행법 (D:\dev\contica-mobile)
+- [Supabase Invalid API key 500](feedback_supabase_api_key_rotation.md) — 증상·원인·수정 절차 체크리스트
