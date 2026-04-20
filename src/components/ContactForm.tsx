@@ -115,14 +115,14 @@ export default function ContactForm({ contact, groups, onSave, onCancel }: Conta
             <input
               type="tel"
               value={form.phone}
-              onChange={e => update('phone', e.target.value)}
+              onChange={e => update('phone', formatKoreanPhone(e.target.value))}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
               placeholder="010-1234-5678"
             />
             <input
               type="tel"
               value={form.phone2}
-              onChange={e => update('phone2', e.target.value)}
+              onChange={e => update('phone2', formatKoreanPhone(e.target.value))}
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
               placeholder="전화번호 2 (선택)"
             />
