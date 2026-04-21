@@ -113,10 +113,10 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
   - `usePhoneSyncBridge`: 서브 계정이면 포그라운드 자동 syncPhoneToApp skip, Realtime 구독은 메인 user_id 기준으로 전환
   - `discover.tsx`: 서브 계정의 Discover insert는 `user_id = MAIN_USER_ID`로 저장
 - **Phase 2 완료 — Supabase RLS** (`supabase-sub-account-rls.sql`, 7fa3cd4 적용): `user_shares` 기반으로 서브 계정이 메인 id로 contacts/groups/contact_groups에 INSERT 허용. UPDATE/DELETE는 의도적 차단. Supabase SQL Editor로 실행 완료, `pg_policies` 3건 확인.
+- **Phase 4 완료 — 웹 중복정리 알림/병합 UI** (커밋 묶음, auto-commit으로 푸시): `DuplicateAlert` 컴포넌트 신규 (헤더 아래 노란 배너, 메인 페이지 로드 시 `/api/v1/contacts/duplicates?mode=exact` 호출해 그룹 수 표시). 배너 클릭 시 `DuplicatesModal` autoStart=true로 자동 open. `DuplicatesModal` 확장: 각 그룹 row에 라디오(기준 primary) + 체크박스(병합 대상) + "선택 병합(N)" 버튼. "전체 병합" 기존 기능도 유지. `page.tsx`: `dupRefreshKey` state로 병합 성공 후 배너 카운트 자동 갱신. `next build` 통과.
 
 ## Next up when resuming
-1. **Phase 4 — 웹 중복정리 알림 + 병합 UI** — 이름 충돌 시 서버에 2 row 남는 구조로 바뀌었으므로 웹에서 (a) 메인 페이지 상단 "중복 N건" 배너, (b) 배너 클릭 → DuplicatesModal 자동 open, (c) 라디오(primary 선택) + 체크박스(병합 대상) + 선택 병합 로직 추가 필요. 예상 1.5시간.
-2. **Phase 3 — 서브 폰 삭제 감지 UI** (다음 세션) — 서브 계정에서 폰 연락처 삭제 시 알림 + 재확인 후 메인 서버 반영.
+1. **Phase 3 — 서브 폰 삭제 감지 UI** (다음 세션) — 서브 계정에서 폰 연락처 삭제 시 알림 + 재확인 후 메인 서버 반영.
 3. **📱 새 APK 설치 + Discover 탭 실기기 테스트** — https://expo.dev/artifacts/eas/gC7LuTurVMdyFJvTPY2KNw.apk. Discover 스캔 + 체크박스 선택 + 행 탭 → tel:/sms: 오픈 확인.
 4. **모바일 Realtime 구독 실기기 테스트** — OAuth 복구됐으니 이제 가능. 🟢 `실시간` 뱃지 노출 + 웹에서 추가 시 0.3초 내 자동 반영 확인
 5. **모바일 Drawer 사이드바 구현** (1~2시간) — `@react-navigation/drawer` 설치 + `app/(drawer)/` 재구성 + 필터(전체/즐겨찾기/휴지통/이름없는) + 그룹 리스트
