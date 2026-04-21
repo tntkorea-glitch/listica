@@ -51,6 +51,8 @@ function ContactsApp() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showImport, setShowImport] = useState(false);
   const [showDuplicates, setShowDuplicates] = useState(false);
+  const [duplicatesAutoStart, setDuplicatesAutoStart] = useState(false);
+  const [dupRefreshKey, setDupRefreshKey] = useState(0);
   const [showExport, setShowExport] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
