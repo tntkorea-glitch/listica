@@ -473,9 +473,10 @@ function ContactsApp() {
       {showImport && <ImportModal onPreview={handleImportPreview} onSave={handleImportSave} onClose={() => setShowImport(false)} />}
       {showDuplicates && (
         <DuplicatesModal
+          autoStart={duplicatesAutoStart}
           onFetch={handleFetchDuplicates}
           onMerge={handleMerge}
-          onClose={() => setShowDuplicates(false)}
+          onClose={() => { setShowDuplicates(false); setDuplicatesAutoStart(false); }}
         />
       )}
       {showExport && (
