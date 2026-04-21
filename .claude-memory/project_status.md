@@ -104,11 +104,22 @@ originSessionId: 33481d0a-b320-4a07-b26a-abea00ed8c67
 - **phone-history 네이티브 모듈 버그 수정** (`f357702`): `getCallLog`/`getSmsLog`에서 `ContentResolver.query` sortOrder에 `"DATE DESC LIMIT N"` 형태로 LIMIT을 넣었던 것이 Android 11+(API 30)에서 `IllegalArgumentException: Invalid token LIMIT`로 거부됨. sortOrder는 `DATE DESC`만 남기고 cursor 루프에서 `results.size >= effectiveLimit` 조건으로 끊도록 변경.
 - **dev client APK 재빌드 완료** — EAS development profile로 Android APK 빌드 (build ID `7e8406ab-dd69-4554-acd4-a3e397576cde`, fingerprint `53ccabf84cb31bf7e96b3f4a4d0deb47375a7664`, commit `f357702`). APK: https://expo.dev/artifacts/eas/gC7LuTurVMdyFJvTPY2KNw.apk. 폰에 설치 후 Discover 탭 스캔 실기기 테스트 필요.
 - **Supabase Auth Google Client ID/Secret 교체 완료** — 구 `773222550757-...` (삭제된 Google OAuth 앱) → 신규 `170510383236-dpi1hbihh8jv73ufcs2v9i1bgdm3i4af...` + Google Cloud `Contica Web`에서 새로 발급한 Secret로 교체. `contica.vercel.app` 프로덕션 Google 로그인 `deleted_client` 에러 해소.
+- **Discover 탭 기능 확장** — 010 휴대폰 번호 필터, 선택 체크박스 + 전체선택/해제, 행 탭 시 통화기록/문자 앱 native 오픈(tel:/sms:), lastSource 시각화, AsyncStorage 기반 스캔 히스토리(NEW/이전 스캔/이미 추가 배지 + 마지막 스캔 시각).
+- **Phase 1 완료 — 메인/서브 계정 구조** (`2d26f97`):
+  - `lib/constants.ts` MAIN_USER_ID(`85f67042-...`) 상수, isMainAccountId 헬퍼
+  - AuthContext에 `isMainAccount` 파생값 노출
+  - `phoneSync.ts` 개선: phoneDataMatches를 phoneKey 기반으로 (+82/phone2 슬롯 대응), per-field 업데이트 루프에 3가지 가드 (이름 충돌 시 새 row insert / 폰 빈 값 방어 / 이름 필드는 서버에 값 있으면 안 덮음)
+  - `sync.tsx`: 서브 계정에서 양방향 버튼 숨김 + 노란 안내 카드
+  - `usePhoneSyncBridge`: 서브 계정이면 포그라운드 자동 syncPhoneToApp skip, Realtime 구독은 메인 user_id 기준으로 전환
+  - `discover.tsx`: 서브 계정의 Discover insert는 `user_id = MAIN_USER_ID`로 저장
+- **Phase 2 완료 — Supabase RLS** (`supabase-sub-account-rls.sql`, 7fa3cd4 적용): `user_shares` 기반으로 서브 계정이 메인 id로 contacts/groups/contact_groups에 INSERT 허용. UPDATE/DELETE는 의도적 차단. Supabase SQL Editor로 실행 완료, `pg_policies` 3건 확인.
 
 ## Next up when resuming
-1. **📱 새 APK 설치 + Discover 탭 실기기 테스트** — https://expo.dev/artifacts/eas/gC7LuTurVMdyFJvTPY2KNw.apk 를 폰에서 다운받아 설치 (기존 dev client 위에 덮어씌우기 OK). Metro dev server 기동 후 연결 → Discover 탭에서 통화/문자 스캔이 예외 없이 동작하는지 확인.
-2. **모바일 Realtime 구독 실기기 테스트** — OAuth 복구됐으니 이제 가능. 🟢 `실시간` 뱃지 노출 + 웹에서 추가 시 0.3초 내 자동 반영 확인
-3. **모바일 Drawer 사이드바 구현** (1~2시간) — `@react-navigation/drawer` 설치 + `app/(drawer)/` 재구성 + 필터(전체/즐겨찾기/휴지통/이름없는) + 그룹 리스트
+1. **Phase 4 — 웹 중복정리 알림 + 병합 UI** — 이름 충돌 시 서버에 2 row 남는 구조로 바뀌었으므로 웹에서 (a) 메인 페이지 상단 "중복 N건" 배너, (b) 배너 클릭 → DuplicatesModal 자동 open, (c) 라디오(primary 선택) + 체크박스(병합 대상) + 선택 병합 로직 추가 필요. 예상 1.5시간.
+2. **Phase 3 — 서브 폰 삭제 감지 UI** (다음 세션) — 서브 계정에서 폰 연락처 삭제 시 알림 + 재확인 후 메인 서버 반영.
+3. **📱 새 APK 설치 + Discover 탭 실기기 테스트** — https://expo.dev/artifacts/eas/gC7LuTurVMdyFJvTPY2KNw.apk. Discover 스캔 + 체크박스 선택 + 행 탭 → tel:/sms: 오픈 확인.
+4. **모바일 Realtime 구독 실기기 테스트** — OAuth 복구됐으니 이제 가능. 🟢 `실시간` 뱃지 노출 + 웹에서 추가 시 0.3초 내 자동 반영 확인
+5. **모바일 Drawer 사이드바 구현** (1~2시간) — `@react-navigation/drawer` 설치 + `app/(drawer)/` 재구성 + 필터(전체/즐겨찾기/휴지통/이름없는) + 그룹 리스트
 4. **⚠️ Supabase Service Role key Reset** — 이전 세션 대화 로그에 평문 노출된 상태. 재발급 → Vercel env 업데이트 → 재배포
 5. **⚠️ 본 계정 비밀번호 변경** — SQL로 임시 설정한 비밀번호가 대화 로그에 남을 수 있음
 6. **Vercel Preview 환경 NEXT_PUBLIC_SUPABASE_ANON_KEY 추가** — CLI Preview 등록 실패 건, UI에서 수동 추가
